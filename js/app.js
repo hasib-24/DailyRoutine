@@ -501,9 +501,10 @@ $('task-modal').querySelector('.modal-backdrop').addEventListener('click', close
 
 // ===== NAVIGATION =====
 function switchView(viewName) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => { v.classList.remove('active'); v.classList.add('hidden'); });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  $(`view-${viewName}`)?.classList.add('active');
+  const targetView = $(`view-${viewName}`);
+  if (targetView) { targetView.classList.remove('hidden'); targetView.classList.add('active'); }
   document.querySelector(`[data-view="${viewName}"]`)?.classList.add('active');
   State.currentView = viewName;
   const titles = { dashboard: 'ড্যাশবোর্ড', schedule: 'শিডিউল তৈরি', tasks: 'সব কাজ', reminders: 'Reminder সেটিংস', backup: 'Backup & Restore' };
