@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>রুটিন প্ল্যানার — আমার দৈনন্দিন শিডিউল</title>
+  <meta name="description" content="স্মার্ট রুটিন ও শিডিউল ম্যানেজার — BCS, পড়াশোনা, দৈনন্দিন কাজ সব এক জায়গায়">
+  <meta name="theme-color" content="#1a1a2e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, where, orderBy, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ============================================================
+    // FIREBASE CONFIG — এখানে তোমার Firebase config বসাও
+    // ============================================================
+    const firebaseConfig = {
+
+  apiKey: "AIzaSyD4mAhO38da8_F_XmTtkDO_oWoa69mgBQ0",
+
+  authDomain: "routine-3783a.firebaseapp.com",
+
+  projectId: "routine-3783a",
+
+  storageBucket: "routine-3783a.firebasestorage.app",
+
+  messagingSenderId: "701566581646",
+
+  appId: "1:701566581646:web:79fc9277b5fe0d65b202df",
+
+  measurementId: "G-PZ0TJH74E3"
+
+};
+
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    window._firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, 
+      collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, where, orderBy, Timestamp, writeBatch };
+    
+    window.dispatchEvent(new Event('firebase-ready'));
+  </script>
+</head>
+<body>
+
+<!-- ===== AUTH SCREEN ===== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">র</div>
+      <h1>রুটিন প্ল্যানার</h1>
+      <p>তোমার স্মার্ট দৈনন্দিন শিডিউল সিস্টেম</p>
+    </div>
+    <div class="auth-features">
+      <div class="feature-item"><span class="feat-icon">🔔</span><span>স্মার্ট Reminder — আগামীকালের কাজ বেশি মনে করাবে</span></div>
+      <div class="feature-item"><span class="feat-icon">🔄</span><span>সব ডিভাইসে Sync — ল্যাপটপ ও মোবাইল একসাথে</span></div>
+      <div class="feature-item"><span class="feat-icon">📅</span><span>১০ দিনের শিডিউল — পরীক্ষা, পড়া, যেকোনো কাজ</span></div>
+      <div class="feature-item"><span class="feat-icon">💾</span><span>Automatic Backup — কোনো ডেটা হারাবে না</span></div>
+    </div>
+    <button id="google-signin-btn" class="google-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google দিয়ে প্রবেশ করো
+    </button>
+    <p class="auth-note">তোমার Gmail ID দিয়ে লগইন করলেই সব ডিভাইসে Sync হবে</p>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" class="app hidden">
+  
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-sm">র</div>
+      <span class="logo-text">রুটিন প্ল্যানার</span>
+      <button class="sidebar-close" id="sidebar-close">✕</button>
+    </div>
+    <div class="user-info" id="user-info">
+      <img id="user-avatar" src="" alt="avatar" class="user-avatar">
+      <div class="user-details">
+        <span id="user-name" class="user-name"></span>
+        <span id="user-email" class="user-email"></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="dashboard">
+        <span class="nav-icon">🏠</span> ড্যাশবোর্ড
+      </button>
+      <button class="nav-item" data-view="schedule">
+        <span class="nav-icon">📅</span> শিডিউল তৈরি
+      </button>
+      <button class="nav-item" data-view="tasks">
+        <span class="nav-icon">✅</span> সব কাজ
+      </button>
+      <button class="nav-item" data-view="reminders">
+        <span class="nav-icon">🔔</span> Reminder সেটিংস
+      </button>
+      <button class="nav-item" data-view="backup">
+        <span class="nav-icon">💾</span> Backup & Restore
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="signout-btn" class="signout-btn">
+        <span>🚪</span> লগ আউট
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <div class="topbar-title" id="topbar-title">ড্যাশবোর্ড</div>
+      <div class="topbar-actions">
+        <button class="notif-btn" id="notif-toggle" title="Notification চালু করো">🔔</button>
+        <button class="add-task-btn" id="quick-add-btn">+ নতুন</button>
+      </div>
+    </header>
+
+    <!-- Notification Banner -->
+    <div id="notif-banner" class="notif-banner hidden">
+      <span>🔔 Browser Notification চালু করলে সময়মতো Reminder পাবে!</span>
+      <button id="enable-notif">চালু করো</button>
+      <button id="dismiss-notif">পরে</button>
+    </div>
+
+    <!-- Views -->
+    <div class="view-container">
+
+      <!-- DASHBOARD VIEW -->
+      <section id="view-dashboard" class="view active">
+        <div class="section-header">
+          <h2 id="today-date-display"></h2>
+          <span id="greeting-text" class="greeting"></span>
+        </div>
+        
+        <!-- Today's Tasks -->
+        <div class="card">
+          <div class="card-header">
+            <h3>আজকের কাজ</h3>
+            <span id="today-progress" class="progress-badge"></span>
+          </div>
+          <div id="today-tasks" class="task-list">
+            <div class="empty-state">আজকের কোনো কাজ নেই। শিডিউলে গিয়ে কাজ যোগ করো।</div>
+          </div>
+        </div>
+
+        <!-- Tomorrow's Tasks -->
+        <div class="card mt-1">
+          <div class="card-header">
+            <h3>আগামীকালের কাজ 🎯</h3>
+            <span class="badge-tomorrow">Priority</span>
+          </div>
+          <div id="tomorrow-tasks" class="task-list">
+            <div class="empty-state">আগামীকালের কোনো কাজ নেই।</div>
+          </div>
+        </div>
+
+        <!-- Day After Tomorrow -->
+        <div class="card mt-1">
+          <div class="card-header">
+            <h3>পরশু দিনের কাজ</h3>
+          </div>
+          <div id="dayafter-tasks" class="task-list">
+            <div class="empty-state">পরশু দিনের কোনো কাজ নেই।</div>
+          </div>
+        </div>
+
+        <!-- Upcoming 10 days summary -->
+        <div class="card mt-1">
+          <div class="card-header">
+            <h3>আগামী ১০ দিনের সারাংশ</h3>
+          </div>
+          <div id="ten-day-summary" class="ten-day-grid"></div>
+        </div>
+      </section>
+
+      <!-- SCHEDULE VIEW -->
+      <section id="view-schedule" class="view hidden">
+        <div class="section-header">
+          <h2>নতুন শিডিউল তৈরি করো</h2>
+        </div>
+        <div class="card">
+          <form id="task-form" class="task-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>কাজের নাম / বিষয় *</label>
+                <input type="text" id="task-title" placeholder="যেমন: বাংলা সাহিত্য পড়া, গণিত পরীক্ষা..." required>
+              </div>
+              <div class="form-group">
+                <label>ক্যাটাগরি</label>
+                <select id="task-category">
+                  <option value="exam">📝 পরীক্ষা</option>
+                  <option value="study">📚 পড়াশোনা</option>
+                  <option value="bcs">🎯 BCS প্রস্তুতি</option>
+                  <option value="job">💼 চাকরির প্রস্তুতি</option>
+                  <option value="personal">🏠 ব্যক্তিগত</option>
+                  <option value="health">🏃 স্বাস্থ্য</option>
+                  <option value="other">📌 অন্যান্য</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>তারিখ *</label>
+                <input type="date" id="task-date" required>
+              </div>
+              <div class="form-group">
+                <label>সময়</label>
+                <input type="time" id="task-time">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>বিস্তারিত (যেমন: লেকচার নম্বর, অধ্যায়...)</label>
+              <textarea id="task-details" rows="3" placeholder="যেমন: ৫ম থেকে ৮ম লেকচার, বাংলাদেশ বিষয়াবলী অধ্যায় ৩-৪..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Reminder কতক্ষণ আগে?</label>
+                <select id="reminder-before">
+                  <option value="15">১৫ মিনিট আগে</option>
+                  <option value="30" selected>৩০ মিনিট আগে</option>
+                  <option value="60">১ ঘন্টা আগে</option>
+                  <option value="120">২ ঘন্টা আগে</option>
+                  <option value="1440">১ দিন আগে</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>গুরুত্ব</label>
+                <select id="task-priority">
+                  <option value="high">🔴 বেশি গুরুত্বপূর্ণ</option>
+                  <option value="medium" selected>🟡 মাঝারি</option>
+                  <option value="low">🟢 কম</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Bulk 10-day schedule -->
+            <div class="bulk-toggle">
+              <input type="checkbox" id="bulk-mode" class="toggle-input">
+              <label for="bulk-mode" class="toggle-label">একসাথে ১০ দিনের শিডিউল তৈরি করো</label>
+            </div>
+            <div id="bulk-schedule" class="bulk-schedule hidden">
+              <p class="bulk-hint">প্রতিদিনের জন্য আলাদা কাজ লিখো (একটি একটি লাইনে):</p>
+              <div id="bulk-days-container"></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" id="clear-form-btn" class="btn-secondary">পরিষ্কার করো</button>
+              <button type="submit" class="btn-primary">শিডিউলে যোগ করো ✓</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ALL TASKS VIEW -->
+      <section id="view-tasks" class="view hidden">
+        <div class="section-header">
+          <h2>সব কাজ</h2>
+          <div class="filter-row">
+            <select id="filter-category" class="filter-select">
+              <option value="all">সব ক্যাটাগরি</option>
+              <option value="exam">📝 পরীক্ষা</option>
+              <option value="study">📚 পড়াশোনা</option>
+              <option value="bcs">🎯 BCS</option>
+              <option value="job">💼 চাকরি</option>
+              <option value="personal">🏠 ব্যক্তিগত</option>
+              <option value="health">🏃 স্বাস্থ্য</option>
+              <option value="other">📌 অন্যান্য</option>
+            </select>
+            <select id="filter-status" class="filter-select">
+              <option value="all">সব স্ট্যাটাস</option>
+              <option value="pending">বাকি আছে</option>
+              <option value="done">সম্পন্ন</option>
+            </select>
+          </div>
+        </div>
+        <div id="all-tasks-list" class="task-list-full"></div>
+      </section>
+
+      <!-- REMINDERS VIEW -->
+      <section id="view-reminders" class="view hidden">
+        <div class="section-header">
+          <h2>Reminder সেটিংস</h2>
+        </div>
+        <div class="card">
+          <h3 class="settings-title">Notification পরিচালনা</h3>
+          <div id="notif-status-display" class="notif-status"></div>
+          <button id="request-notif-perm" class="btn-primary mt-1">🔔 Browser Notification চালু করো</button>
+        </div>
+        <div class="card mt-1">
+          <h3 class="settings-title">Smart Reminder নিয়ম</h3>
+          <div class="reminder-rules">
+            <div class="rule-item">
+              <div class="rule-icon today">আজ</div>
+              <div class="rule-text">
+                <strong>আজকের কাজ</strong>
+                <span>প্রতি ঘন্টায় Reminder (সকাল ৮টা থেকে রাত ১০টা)</span>
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-icon tomorrow">কাল</div>
+              <div class="rule-text">
+                <strong>আগামীকালের কাজ</strong>
+                <span>প্রতি ৩ ঘন্টায় Reminder — বেশি মনে করাবে</span>
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-icon dayafter">পরশু</div>
+              <div class="rule-text">
+                <strong>পরশু দিনের কাজ</strong>
+                <span>দিনে ৩ বার Reminder</span>
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-icon upcoming">বাকি</div>
+              <div class="rule-text">
+                <strong>বাকি দিনগুলো</strong>
+                <span>দিনে একবার সকালে মনে করাবে</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-1">
+          <h3 class="settings-title">In-App Notification লগ</h3>
+          <div id="notif-log" class="notif-log">
+            <div class="empty-state">এখনো কোনো Notification নেই।</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BACKUP VIEW -->
+      <section id="view-backup" class="view hidden">
+        <div class="section-header">
+          <h2>Backup & Restore</h2>
+        </div>
+        <div class="card">
+          <h3 class="settings-title">ডেটা Export (Backup)</h3>
+          <p class="settings-desc">তোমার সব শিডিউল ও কাজ JSON ফাইলে সেভ করো। যেকোনো সময় হারিয়ে গেলে Restore করতে পারবে।</p>
+          <div class="backup-actions">
+            <button id="export-json-btn" class="btn-primary">⬇ JSON Backup নামাও</button>
+            <button id="export-csv-btn" class="btn-secondary">⬇ CSV (Excel) নামাও</button>
+          </div>
+          <div id="last-backup-info" class="backup-info"></div>
+        </div>
+        <div class="card mt-1">
+          <h3 class="settings-title">ডেটা Import (Restore)</h3>
+          <p class="settings-desc">আগের Backup থেকে সব কাজ ফিরিয়ে আনো। <strong>সতর্কতা:</strong> এটা বর্তমান ডেটার সাথে Merge হবে।</p>
+          <div class="import-area">
+            <input type="file" id="import-file" accept=".json" class="file-input">
+            <label for="import-file" class="file-label">📁 JSON ফাইল বেছে নাও</label>
+            <span id="import-filename" class="import-filename"></span>
+          </div>
+          <button id="import-btn" class="btn-primary mt-1" disabled>⬆ Restore করো</button>
+          <div id="import-status" class="import-status"></div>
+        </div>
+        <div class="card mt-1">
+          <h3 class="settings-title">Firebase Sync স্ট্যাটাস</h3>
+          <div id="sync-status" class="sync-status">
+            <div class="sync-item">
+              <span class="sync-dot online"></span>
+              <span>Firebase Firestore — Real-time Sync চালু আছে</span>
+            </div>
+            <div class="sync-item">
+              <span class="sync-dot"></span>
+              <span id="last-sync-time">সর্বশেষ Sync: </span>
+            </div>
+          </div>
+          <button id="manual-sync-btn" class="btn-secondary mt-1">🔄 এখনই Sync করো</button>
+        </div>
+      </section>
+
+    </div><!-- end view-container -->
+  </main>
+</div>
+
+<!-- TASK MODAL -->
+<div id="task-modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <h3 id="modal-title">কাজের বিস্তারিত</h3>
+    <div id="modal-content"></div>
+    <div class="modal-actions">
+      <button id="modal-complete-btn" class="btn-success">✓ সম্পন্ন হয়েছে</button>
+      <button id="modal-delete-btn" class="btn-danger">🗑 মুছে দাও</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- In-App Notification Panel -->
+<div id="inapp-notif-panel" class="inapp-notif-panel hidden">
+  <div class="inapp-header">
+    <span>🔔 Reminders</span>
+    <button id="close-inapp-panel">✕</button>
+  </div>
+  <div id="inapp-notif-list" class="inapp-notif-list"></div>
+</div>
+<div id="notif-badge" class="notif-badge hidden">0</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

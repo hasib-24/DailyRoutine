@@ -1,0 +1,39 @@
+{
+  "name": "রুটিন প্ল্যানার — স্মার্ট শিডিউল সিস্টেম",
+  "short_name": "রুটিন প্ল্যানার",
+  "description": "BCS, চাকরির প্রস্তুতি ও দৈনন্দিন কাজের স্মার্ট শিডিউল ম্যানেজার",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#1a1a2e",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "bn",
+  "icons": [
+    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "নতুন কাজ যোগ করো",
+      "short_name": "নতুন কাজ",
+      "description": "সরাসরি শিডিউলে নতুন কাজ যোগ করো",
+      "url": "/?view=schedule",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "আজকের শিডিউল",
+      "short_name": "আজকের কাজ",
+      "url": "/?view=dashboard",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["productivity", "education", "utilities"],
+  "screenshots": []
+}
